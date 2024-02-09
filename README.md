@@ -2,7 +2,6 @@
 
 > This repository builds and deploys a simple application using Terraform to deploy the infrastructure, Docker to build the image, and AWS Elastic Beanstalk to run the container.
 
-
 ### Applied Concepts
 
 - **Elastic Bean Stalk (ECS)** to run containers.
@@ -17,7 +16,7 @@
 - [Official AWS Docs](https://docs.aws.amazon.com/)
 - [ECR Public Repository](https://gallery.ecr.aws/)
 
-## Explored:
+## Explored
 
 - How to create [Docker images for a Django project](https://docs.docker.com/samples/django/).
 
@@ -36,3 +35,56 @@
 - Create [Dockerrun.aws.json](https://docs.aws.amazon.com/pt_br/elasticbeanstalk/latest/dg/single-container-docker-configuration.html) to run a Beanstalk application.
 
 - Create, configure and add files to a **AWS S3 Bucket** through the Terraform.
+
+## Deploy
+
+---
+
+### Infra
+
+1. Go to
+   ```
+   cd ./env/prod
+   ```
+2. Check
+   ```
+   terraform plan
+   ```
+3. Deploy
+   ```
+   terraform apply
+   ```
+
+**Web Interface:**
+> http://<elasticbeanstalk_dns>:**80**
+
+### Update application version
+
+1. Build new image
+
+   ```bash
+   cd ./api
+   docker build -t [AWS_ACCOUNT_ID].dkr.ecr.[REGION].amazonaws.com/production:v1 .
+   ```
+
+2. Push image to ECR
+
+   ```bash
+    docker push [AWS_ACCOUNT_ID].dkr.ecr.[REGION].amazonaws.com/production:v1
+
+   aws ecr get-login-password --region [REGION] | docker login --username AWS --password-stdin [AWS_ACCOUNT_ID].dkr.ecr.[REGION].amazonaws.com
+   ```
+
+3. ZIP Dockerfilerun.aws.json
+   ```bash
+   zip -r production.zip Dockerrun.aws.json
+   ```
+4. Deploy with Terraform
+   ```bash
+   terraform init
+   terraform apply
+   ```
+5. Update application version
+   ```bash
+   aws elasticbeanstalk update-environment --environment production-environment --version-label production
+   ```
